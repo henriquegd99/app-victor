@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App do Personal Victor</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #e9ecef;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      color: #222;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ced4da;
+      border-radius: 10px;
+      box-sizing: border-box;
+    }
+    input[type="file"] {
+      padding: 5px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 25px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .aluno-card {
+      border: 1px solid #dee2e6;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 12px;
+      background: #f8f9fa;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>App do Personal Victor</h1>
+    <form id="formAluno">
+      <label>Nome do Aluno</label>
+      <input type="text" id="nome" required>
+
+      <label>Objetivo</label>
+      <select id="objetivo">
+        <option>Hipertrofia</option>
+        <option>Emagrecimento</option>
+        <option>Resistência</option>
+        <option>Outro</option>
+      </select>
+
+      <label>Frequência Semanal</label>
+      <input type="number" id="frequencia" min="1" max="7" required>
+
+      <label>Observações</label>
+      <textarea id="obs"></textarea>
+
+      <label>Enviar vídeo do aluno (opcional)</label>
+      <input type="file" id="video" accept="video/*">
+
+      <button type="submit">Adicionar Aluno</button>
+    </form>
+
+    <h2>Alunos cadastrados</h2>
+    <div id="listaAlunos"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('formAluno');
+    const lista = document.getElementById('listaAlunos');
+
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const nome = document.getElementById('nome').value;
+      const objetivo = document.getElementById('objetivo').value;
+      const frequencia = document.getElementById('frequencia').value;
+      const obs = document.getElementById('obs').value;
+      const videoFile = document.getElementById('video').files[0];
+
+      const card = document.createElement('div');
+      card.className = 'aluno-card';
+
+      let videoPreview = '';
+      if (videoFile) {
+        const videoURL = URL.createObjectURL(videoFile);
+        videoPreview = `<video width="100%" controls><source src="${videoURL}" type="${videoFile.type}"></video>`;
+      }
+
+      card.innerHTML = `
+        <strong>${nome}</strong><br>
+        Objetivo: ${objetivo}<br>
+        Frequência: ${frequencia}x/semana<br>
+        Observações: ${obs || 'Nenhuma'}<br>
+        ${videoPreview}
+      `;
+
+      lista.appendChild(card);
+      form.reset();
+    });
+  </script>
+</body>
+</html>
