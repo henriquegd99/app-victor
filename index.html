@@ -67,16 +67,8 @@
       <label>Nome do Aluno</label>
       <input type="text" id="nome" required>
 
-      <label>Objetivo</label>
-      <select id="objetivo">
-        <option>Hipertrofia</option>
-        <option>Emagrecimento</option>
-        <option>Resistência</option>
-        <option>Outro</option>
-      </select>
-
-      <label>Frequência Semanal</label>
-      <input type="number" id="frequencia" min="1" max="7" required>
+      <label>Séries / Repetições</label>
+      <input type="text" id="serieRepeticao" placeholder="Ex: 4 / 12" required>
 
       <label>Observações</label>
       <textarea id="obs"></textarea>
@@ -99,8 +91,7 @@
       event.preventDefault();
 
       const nome = document.getElementById('nome').value;
-      const objetivo = document.getElementById('objetivo').value;
-      const frequencia = document.getElementById('frequencia').value;
+      const serieRepeticao = document.getElementById('serieRepeticao').value;
       const obs = document.getElementById('obs').value;
       const videoFile = document.getElementById('video').files[0];
 
@@ -115,8 +106,7 @@
 
       card.innerHTML = `
         <strong>${nome}</strong><br>
-        Objetivo: ${objetivo}<br>
-        Frequência: ${frequencia}x/semana<br>
+        Séries / Repetições: ${serieRepeticao}<br>
         Observações: ${obs || 'Nenhuma'}<br>
         ${videoPreview}
       `;
