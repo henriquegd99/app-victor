@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>App do Personal Victor</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -34,9 +37,6 @@
       border: 1px solid #ced4da;
       border-radius: 10px;
       box-sizing: border-box;
-    }
-    input[type="file"] {
-      padding: 5px;
     }
     button {
       margin-top: 20px;
@@ -70,21 +70,31 @@
       padding: 5px 10px;
       cursor: pointer;
     }
-    .remover-btn:hover {
-      background-color: #c82333;
-    }
     .top-right-btn {
       position: absolute;
       top: 20px;
       right: 20px;
     }
+    #app, #alunosContainer {
+      display: none;
+    }
   </style>
 </head>
 <body>
+  <div class="container" id="loginContainer">
+    <h1>Login</h1>
+    <label>Email</label>
+    <input type="email" id="email">
+    <label>Senha</label>
+    <input type="password" id="senha">
+    <button onclick="login()">Entrar</button>
+  </div>
+
   <div class="top-right-btn">
     <button onclick="voltarParaInicio()">Voltar</button>
   </div>
-  <div class="container">
+
+  <div class="container" id="app">
     <h1>App do Personal Victor</h1>
     <form id="formAluno">
       <label>Nome do Aluno</label>
@@ -101,12 +111,38 @@
 
       <button type="submit">Adicionar Aluno</button>
     </form>
+  </div>
 
+  <div class="container" id="alunosContainer">
     <h2>Alunos cadastrados</h2>
     <div id="listaAlunos"></div>
   </div>
 
   <script>
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY",
+      authDomain: "SEU_DOMINIO.firebaseapp.com",
+      projectId: "SEU_PROJECT_ID",
+      storageBucket: "SEU_BUCKET.appspot.com",
+      messagingSenderId: "SEU_SENDER_ID",
+      appId: "SEU_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    function login() {
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+      auth.signInWithEmailAndPassword(email, senha)
+        .then(() => {
+          document.getElementById('loginContainer').style.display = 'none';
+          document.getElementById('app').style.display = 'block';
+          document.getElementById('alunosContainer').style.display = 'block';
+        })
+        .catch(error => alert('Erro ao logar: ' + error.message));
+    }
+
     const form = document.getElementById('formAluno');
     const lista = document.getElementById('listaAlunos');
 
