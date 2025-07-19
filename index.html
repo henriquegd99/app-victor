@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>App do Personal Victor</title>
+
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -20,6 +22,7 @@
       padding: 30px;
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      display: none;
     }
     h1, h2 {
       text-align: center;
@@ -71,17 +74,22 @@
       cursor: pointer;
     }
     .top-right-btn {
-      position: absolute;
+      position: fixed;
       top: 20px;
       right: 20px;
-    }
-    #app, #alunosContainer {
-      display: none;
+      z-index: 100;
     }
   </style>
 </head>
 <body>
-  <div class="container" id="loginContainer">
+
+  <!-- Botão Voltar -->
+  <div class="top-right-btn">
+    <button onclick="voltarParaInicio()">Voltar</button>
+  </div>
+
+  <!-- Tela de Login -->
+  <div class="container" id="loginContainer" style="display: block;">
     <h1>Login</h1>
     <label>Email</label>
     <input type="email" id="email">
@@ -90,10 +98,7 @@
     <button onclick="login()">Entrar</button>
   </div>
 
-  <div class="top-right-btn">
-    <button onclick="voltarParaInicio()">Voltar</button>
-  </div>
-
+  <!-- Tela do Personal -->
   <div class="container" id="app">
     <h1>App do Personal Victor</h1>
     <form id="formAluno">
@@ -118,6 +123,12 @@
     <div id="listaAlunos"></div>
   </div>
 
+  <!-- Tela do Aluno -->
+  <div class="container" id="telaAluno">
+    <h2>Bem-vindo ao seu treino!</h2>
+    <p>Aqui você verá seus treinos personalizados em breve.</p>
+  </div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCUzsO0GCYCVtcy161JYl7OFQ3vEA9WcD8",
@@ -125,63 +136,82 @@
       projectId: "app-personal-victor",
       storageBucket: "app-personal-victor.firebasestorage.app",
       messagingSenderId: "148264648190",
-      appId: "1:148264648190:web:44ca5e2d571a5d00acd4af"
+      appId: "1:148264648190:web:44ca5e2d571a5d00acd4af",
+      measurementId: "G-34J0VYZ0FB"
     };
 
-      // Inicializa o Firebase
-  firebase.initializeApp(firebaseConfig);
-</script>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
     function login() {
       const email = document.getElementById('email').value;
       const senha = document.getElementById('senha').value;
+
       auth.signInWithEmailAndPassword(email, senha)
-        .then(() => {
+        .then((userCredential) => {
+          const user = userCredential.user;
+          const emailUsuario = user.email;
+
           document.getElementById('loginContainer').style.display = 'none';
-          document.getElementById('app').style.display = 'block';
-          document.getElementById('alunosContainer').style.display = 'block';
+
+          if (emailUsuario === "victor@personal.com") {
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('alunosContainer').style.display = 'block';
+          } else {
+            document.getElementById('telaAluno').style.display = 'block';
+          }
         })
         .catch(error => alert('Erro ao logar: ' + error.message));
+    }
+
+    function voltarParaInicio() {
+      // Oculta todas as telas
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('alunosContainer').style.display = 'none';
+      document.getElementById('telaAluno').style.display = 'none';
+      document.getElementById('loginContainer').style.display = 'block';
+
+      // Desloga usuário atual (opcional)
+      auth.signOut();
     }
 
     const form = document.getElementById('formAluno');
     const lista = document.getElementById('listaAlunos');
 
-    form.addEventListener('submit', function(event) {
-      event.preventDefault();
+    if (form) {
+      form.addEventListener('submit', function(event) {
+        event.preventDefault();
 
-      const nome = document.getElementById('nome').value;
-      const serieReps = document.getElementById('serieReps').value;
-      const obs = document.getElementById('obs').value;
-      const videoFile = document.getElementById('video').files[0];
+        const nome = document.getElementById('nome').value;
+        const serieReps = document.getElementById('serieReps').value;
+        const obs = document.getElementById('obs').value;
+        const videoFile = document.getElementById('video').files[0];
 
-      const card = document.createElement('div');
-      card.className = 'aluno-card';
+        const card = document.createElement('div');
+        card.className = 'aluno-card';
 
-      let videoPreview = '';
-      if (videoFile) {
-        const videoURL = URL.createObjectURL(videoFile);
-        videoPreview = `<video width="100%" controls><source src="${videoURL}" type="${videoFile.type}"></video>`;
-      }
+        let videoPreview = '';
+        if (videoFile) {
+          const videoURL = URL.createObjectURL(videoFile);
+          videoPreview = `<video width="100%" controls><source src="${videoURL}" type="${videoFile.type}"></video>`;
+        }
 
-      card.innerHTML = `
-        <button class="remover-btn" onclick="removerAluno(this)">Remover</button>
-        <strong>${nome}</strong><br>
-        Séries / Repetições: ${serieReps}<br>
-        Observações: ${obs || 'Nenhuma'}<br>
-        ${videoPreview}
-      `;
+        card.innerHTML = `
+          <button class="remover-btn" onclick="removerAluno(this)">Remover</button>
+          <strong>${nome}</strong><br>
+          Séries / Repetições: ${serieReps}<br>
+          Observações: ${obs || 'Nenhuma'}<br>
+          ${videoPreview}
+        `;
 
-      lista.appendChild(card);
-      form.reset();
-    });
+        lista.appendChild(card);
+        form.reset();
+      });
+    }
 
     function removerAluno(button) {
       const card = button.parentElement;
       lista.removeChild(card);
-    }
-
-    function voltarParaInicio() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   </script>
 </body>
