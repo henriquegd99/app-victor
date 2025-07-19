@@ -2,139 +2,146 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>App do Personal Victor - Login de Aluno</title>
+  <title>App Personal Victor</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f5f5;
+      background: #f2f2f2;
       padding: 20px;
     }
     .container {
-      max-width: 400px;
+      max-width: 500px;
       margin: auto;
       background: white;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
     }
     input, button {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
-      border-radius: 8px;
+      border-radius: 5px;
       border: 1px solid #ccc;
-      box-sizing: border-box;
     }
     button {
-      background-color: #007bff;
+      background: #007bff;
       color: white;
       font-weight: bold;
       cursor: pointer;
     }
-    h2 {
-      text-align: center;
-    }
-    #alunoArea, #cadastroArea {
-      display: none;
+    button:hover {
+      background: #0056b3;
     }
   </style>
 </head>
 <body>
+  <div class="container" id="loginArea">
+    <h2>Login</h2>
+    <input type="email" id="usuarioLogin" placeholder="Email">
+    <input type="password" id="senhaLogin" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
+  </div>
 
-<div class="container" id="loginArea">
-  <h2>Login do Aluno</h2>
-  <input type="text" id="usuarioLogin" placeholder="Usuário">
-  <input type="password" id="senhaLogin" placeholder="Senha">
-  <button onclick="loginAluno()">Entrar</button>
-</div>
+  <div class="container" id="cadastroArea" style="display:none;">
+    <h2>Cadastrar Aluno</h2>
+    <input type="text" id="nomeAluno" placeholder="Nome">
+    <input type="email" id="usuarioAluno" placeholder="Email do Aluno">
+    <input type="password" id="senhaAluno" placeholder="Senha do Aluno">
+    <button onclick="cadastrarAluno()">Cadastrar</button>
+    <button onclick="sair()">Sair</button>
+  </div>
 
-<div class="container" id="alunoArea">
-  <h2>Bem-vindo, <span id="alunoNome"></span>!</h2>
-  <p>Aqui vão os treinos, vídeos etc...</p>
-  <button onclick="sair()">Sair</button>
-</div>
+  <div class="container" id="alunoArea" style="display:none;">
+    <h2>Bem-vindo, <span id="alunoNome"></span></h2>
+    <button onclick="sair()">Sair</button>
+  </div>
 
-<div class="container" id="cadastroArea">
-  <h2>Cadastro de Aluno (Personal)</h2>
-  <input type="text" id="nomeAluno" placeholder="Nome do aluno">
-  <input type="text" id="usuarioAluno" placeholder="Usuário">
-  <input type="password" id="senhaAluno" placeholder="Senha">
-  <button onclick="cadastrarAluno()">Cadastrar Aluno</button>
-</div>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCUzsO0GCYCVtcy161JYl7OFQ3vEA9WcD8",
+      authDomain: "app-personal-victor.firebaseapp.com",
+      projectId: "app-personal-victor",
+      storageBucket: "app-personal-victor.firebasestorage.app",
+      messagingSenderId: "148264648190",
+      appId: "1:148264648190:web:44ca5e2d571a5d00acd4af",
+      measurementId: "G-34J0VYZ0FB"
+    };
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCUzsO0GCYCVtcy161JYl7OFQ3vEA9WcD8",
-    authDomain: "app-personal-victor.firebaseapp.com",
-    projectId: "app-personal-victor",
-    storageBucket: "app-personal-victor.firebasestorage.app",
-    messagingSenderId: "148264648190",
-    appId: "1:148264648190:web:44ca5e2d571a5d00acd4af",
-    measurementId: "G-34J0VYZ0FB"
-  };
-<script>
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-  function loginAluno() {
-    const usuario = document.getElementById("usuarioLogin").value;
-    const senha = document.getElementById("senhaLogin").value;
+    function login() {
+      const email = document.getElementById("usuarioLogin").value;
+      const senha = document.getElementById("senhaLogin").value;
 
-    if (usuario === "victor" && senha === "123") {
-      // login do personal
-      document.getElementById("loginArea").style.display = "none";
-      document.getElementById("cadastroArea").style.display = "block";
-    } else {
-      // login de aluno (busca no Firestore)
-      db.collection("alunos")
-        .where("usuario", "==", usuario)
-        .where("senha", "==", senha)
-        .get()
-        .then(snapshot => {
-          if (!snapshot.empty) {
-            const doc = snapshot.docs[0].data();
-            document.getElementById("loginArea").style.display = "none";
-            document.getElementById("alunoArea").style.display = "block";
-            document.getElementById("alunoNome").innerText = doc.nome;
+      auth.signInWithEmailAndPassword(email, senha)
+        .then((userCredential) => {
+          const user = userCredential.user;
+
+          document.getElementById("loginArea").style.display = "none";
+
+          if (user.email === "victor@personal.com") {
+            document.getElementById("cadastroArea").style.display = "block";
           } else {
-            alert("Usuário ou senha inválidos");
+            db.collection("alunos").doc(user.uid).get().then(doc => {
+              const dados = doc.data();
+              if (dados) {
+                document.getElementById("alunoArea").style.display = "block";
+                document.getElementById("alunoNome").innerText = dados.nome || user.email;
+              } else {
+                alert("Dados do aluno não encontrados.");
+                auth.signOut();
+                document.getElementById("loginArea").style.display = "block";
+              }
+            });
           }
+        })
+        .catch(error => {
+          alert("Erro ao fazer login: " + error.message);
         });
     }
-  }
 
-  function cadastrarAluno() {
-    const nome = document.getElementById("nomeAluno").value;
-    const usuario = document.getElementById("usuarioAluno").value;
-    const senha = document.getElementById("senhaAluno").value;
+    function cadastrarAluno() {
+      const nome = document.getElementById("nomeAluno").value;
+      const email = document.getElementById("usuarioAluno").value;
+      const senha = document.getElementById("senhaAluno").value;
 
-    if (!nome || !usuario || !senha) {
-      alert("Preencha todos os campos!");
-      return;
+      if (!nome || !email || !senha) {
+        alert("Preencha todos os campos!");
+        return;
+      }
+
+      auth.createUserWithEmailAndPassword(email, senha)
+        .then((userCredential) => {
+          const uid = userCredential.user.uid;
+          return db.collection("alunos").doc(uid).set({ nome });
+        })
+        .then(() => {
+          alert("Aluno cadastrado com sucesso!");
+          document.getElementById("nomeAluno").value = "";
+          document.getElementById("usuarioAluno").value = "";
+          document.getElementById("senhaAluno").value = "";
+        })
+        .catch(error => {
+          alert("Erro ao cadastrar aluno: " + error.message);
+        });
     }
 
-    db.collection("alunos").add({ nome, usuario, senha })
-      .then(() => {
-        alert("Aluno cadastrado com sucesso!");
-        document.getElementById("nomeAluno").value = "";
-        document.getElementById("usuarioAluno").value = "";
-        document.getElementById("senhaAluno").value = "";
+    function sair() {
+      auth.signOut().then(() => {
+        document.getElementById("loginArea").style.display = "block";
+        document.getElementById("cadastroArea").style.display = "none";
+        document.getElementById("alunoArea").style.display = "none";
       });
-  }
-
-  function sair() {
-    document.getElementById("loginArea").style.display = "block";
-    document.getElementById("alunoArea").style.display = "none";
-    document.getElementById("cadastroArea").style.display = "none";
-  }
-</script>
-"""
-
-# Salvar para disponibilizar o código
-path = "/mnt/data/app_aluno_personal_firebase.html"
-with open(path, "w", encoding="utf-8") as f:
-    f.write(html_code)
-
-path
+    }
+  </script>
+</body>
+</html>
