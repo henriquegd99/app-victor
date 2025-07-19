@@ -57,10 +57,33 @@
       margin-top: 15px;
       border-radius: 12px;
       background: #f8f9fa;
+      position: relative;
+    }
+    .remover-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    .remover-btn:hover {
+      background-color: #c82333;
+    }
+    .top-right-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
     }
   </style>
 </head>
 <body>
+  <div class="top-right-btn">
+    <button onclick="voltarParaInicio()">Voltar</button>
+  </div>
   <div class="container">
     <h1>App do Personal Victor</h1>
     <form id="formAluno">
@@ -68,7 +91,7 @@
       <input type="text" id="nome" required>
 
       <label>Séries / Repetições</label>
-      <input type="text" id="serieRepeticao" placeholder="Ex: 4 / 12" required>
+      <input type="text" id="serieReps" placeholder="Ex: 4 / 12" required>
 
       <label>Observações</label>
       <textarea id="obs"></textarea>
@@ -91,7 +114,7 @@
       event.preventDefault();
 
       const nome = document.getElementById('nome').value;
-      const serieRepeticao = document.getElementById('serieRepeticao').value;
+      const serieReps = document.getElementById('serieReps').value;
       const obs = document.getElementById('obs').value;
       const videoFile = document.getElementById('video').files[0];
 
@@ -105,8 +128,9 @@
       }
 
       card.innerHTML = `
+        <button class="remover-btn" onclick="removerAluno(this)">Remover</button>
         <strong>${nome}</strong><br>
-        Séries / Repetições: ${serieRepeticao}<br>
+        Séries / Repetições: ${serieReps}<br>
         Observações: ${obs || 'Nenhuma'}<br>
         ${videoPreview}
       `;
@@ -114,6 +138,15 @@
       lista.appendChild(card);
       form.reset();
     });
+
+    function removerAluno(button) {
+      const card = button.parentElement;
+      lista.removeChild(card);
+    }
+
+    function voltarParaInicio() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   </script>
 </body>
 </html>
