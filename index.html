@@ -74,30 +74,38 @@
     appId: "1:148264648190:web:44ca5e2d571a5d00acd4af",
     measurementId: "G-34J0VYZ0FB"
   };
-
+<script>
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  async function loginAluno() {
+  function loginAluno() {
     const usuario = document.getElementById("usuarioLogin").value;
     const senha = document.getElementById("senhaLogin").value;
 
-    const snapshot = await db.collection("alunos")
-      .where("usuario", "==", usuario)
-      .where("senha", "==", senha)
-      .get();
-
-    if (!snapshot.empty) {
-      const doc = snapshot.docs[0].data();
+    if (usuario === "victor" && senha === "123") {
+      // login do personal
       document.getElementById("loginArea").style.display = "none";
-      document.getElementById("alunoArea").style.display = "block";
-      document.getElementById("alunoNome").innerText = doc.nome;
+      document.getElementById("cadastroArea").style.display = "block";
     } else {
-      alert("Usuário ou senha inválidos");
+      // login de aluno (busca no Firestore)
+      db.collection("alunos")
+        .where("usuario", "==", usuario)
+        .where("senha", "==", senha)
+        .get()
+        .then(snapshot => {
+          if (!snapshot.empty) {
+            const doc = snapshot.docs[0].data();
+            document.getElementById("loginArea").style.display = "none";
+            document.getElementById("alunoArea").style.display = "block";
+            document.getElementById("alunoNome").innerText = doc.nome;
+          } else {
+            alert("Usuário ou senha inválidos");
+          }
+        });
     }
   }
 
-  async function cadastrarAluno() {
+  function cadastrarAluno() {
     const nome = document.getElementById("nomeAluno").value;
     const usuario = document.getElementById("usuarioAluno").value;
     const senha = document.getElementById("senhaAluno").value;
@@ -107,21 +115,21 @@
       return;
     }
 
-    await db.collection("alunos").add({ nome, usuario, senha });
-    alert("Aluno cadastrado com sucesso!");
+    db.collection("alunos").add({ nome, usuario, senha })
+      .then(() => {
+        alert("Aluno cadastrado com sucesso!");
+        document.getElementById("nomeAluno").value = "";
+        document.getElementById("usuarioAluno").value = "";
+        document.getElementById("senhaAluno").value = "";
+      });
   }
 
   function sair() {
-    document.getElementById("alunoArea").style.display = "none";
     document.getElementById("loginArea").style.display = "block";
+    document.getElementById("alunoArea").style.display = "none";
+    document.getElementById("cadastroArea").style.display = "none";
   }
-
-  // Para testes: mostrar também o formulário de cadastro (em produção isso seria restrito ao personal)
-  document.getElementById("cadastroArea").style.display = "block";
 </script>
-
-</body>
-</html>
 """
 
 # Salvar para disponibilizar o código
