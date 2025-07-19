@@ -1,147 +1,220 @@
+<!-- Coloque este conteúdo em um arquivo HTML (ex: index.html) -->
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>App Personal Victor</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      padding: 20px;
-    }
+    body { font-family: Arial; background: #f4f4f4; margin: 0; padding: 0; }
     .container {
-      max-width: 500px;
-      margin: auto;
+      max-width: 600px;
+      margin: 40px auto;
       background: white;
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    h2 {
-      text-align: center;
-    }
-    input, button {
+    input, select, textarea, button {
       width: 100%;
-      padding: 10px;
       margin-top: 10px;
+      padding: 10px;
       border-radius: 5px;
       border: 1px solid #ccc;
+      box-sizing: border-box;
     }
     button {
-      background: #007bff;
+      background-color: #007bff;
       color: white;
       font-weight: bold;
       cursor: pointer;
     }
     button:hover {
-      background: #0056b3;
+      background-color: #0056b3;
+    }
+    .hidden { display: none; }
+    .btn-group button {
+      width: 32%;
+      margin: 1%;
     }
   </style>
 </head>
 <body>
-  <div class="container" id="loginArea">
-    <h2>Login</h2>
-    <input type="email" id="usuarioLogin" placeholder="Email">
-    <input type="password" id="senhaLogin" placeholder="Senha">
-    <button onclick="login()">Entrar</button>
-  </div>
 
-  <div class="container" id="cadastroArea" style="display:none;">
-    <h2>Cadastrar Aluno</h2>
-    <input type="text" id="nomeAluno" placeholder="Nome">
-    <input type="email" id="usuarioAluno" placeholder="Email do Aluno">
-    <input type="password" id="senhaAluno" placeholder="Senha do Aluno">
+<div class="container" id="loginContainer">
+  <h2>Login</h2>
+  <input type="email" id="emailLogin" placeholder="Email">
+  <input type="password" id="senhaLogin" placeholder="Senha">
+  <button onclick="login()">Entrar</button>
+</div>
+
+<div class="container hidden" id="personalContainer">
+  <h2>Bem-vindo, Victor</h2>
+  <div class="btn-group">
+    <button onclick="mostrarSecao('cadastroAluno')">Cadastrar Aluno</button>
+    <button onclick="mostrarSecao('gerenciarTreinos')">Gerenciar Treinos</button>
+    <button onclick="mostrarSecao('verAlunos')">Ver Alunos</button>
+  </div>
+  <button onclick="logout()">Sair</button>
+
+  <div id="cadastroAluno" class="hidden">
+    <h3>Cadastrar Novo Aluno</h3>
+    <input type="text" id="nomeAluno" placeholder="Nome do aluno">
+    <input type="email" id="emailAluno" placeholder="Email do aluno">
+    <input type="password" id="senhaAluno" placeholder="Senha do aluno">
     <button onclick="cadastrarAluno()">Cadastrar</button>
-    <button onclick="sair()">Sair</button>
   </div>
 
-  <div class="container" id="alunoArea" style="display:none;">
-    <h2>Bem-vindo, <span id="alunoNome"></span></h2>
-    <button onclick="sair()">Sair</button>
+  <div id="gerenciarTreinos" class="hidden">
+    <h3>Adicionar Treino para Aluno</h3>
+    <select id="alunoTreino"></select>
+    <input type="text" id="tipoTreino" placeholder="Tipo de treino">
+    <input type="text" id="seriesReps" placeholder="Séries / Repetições (ex: 4 / 12)">
+    <textarea id="obsTreino" placeholder="Observações"></textarea>
+    <button onclick="adicionarTreino()">Salvar Treino</button>
   </div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCUzsO0GCYCVtcy161JYl7OFQ3vEA9WcD8",
-      authDomain: "app-personal-victor.firebaseapp.com",
-      projectId: "app-personal-victor",
-      storageBucket: "app-personal-victor.firebasestorage.app",
-      messagingSenderId: "148264648190",
-      appId: "1:148264648190:web:44ca5e2d571a5d00acd4af",
-      measurementId: "G-34J0VYZ0FB"
-    };
+  <div id="verAlunos" class="hidden">
+    <h3>Alunos Cadastrados</h3>
+    <div id="listaAlunos"></div>
+  </div>
+</div>
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+<div class="container hidden" id="alunoContainer">
+  <h2>Seus Treinos</h2>
+  <div id="treinosAluno"></div>
+  <button onclick="logout()">Sair</button>
+</div>
 
-    function login() {
-      const email = document.getElementById("usuarioLogin").value;
-      const senha = document.getElementById("senhaLogin").value;
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCUzsO0GCYCVtcy161JYl7OFQ3vEA9WcD8",
+    authDomain: "app-personal-victor.firebaseapp.com",
+    projectId: "app-personal-victor",
+    storageBucket: "app-personal-victor.firebasestorage.app",
+    messagingSenderId: "148264648190",
+    appId: "1:148264648190:web:44ca5e2d571a5d00acd4af",
+    measurementId: "G-34J0VYZ0FB"
+  };
 
-      auth.signInWithEmailAndPassword(email, senha)
-        .then((userCredential) => {
-          const user = userCredential.user;
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-          document.getElementById("loginArea").style.display = "none";
+  function login() {
+    const email = document.getElementById("emailLogin").value;
+    const senha = document.getElementById("senhaLogin").value;
+    auth.signInWithEmailAndPassword(email, senha)
+      .then((userCred) => {
+        const email = userCred.user.email;
+        document.getElementById("loginContainer").classList.add("hidden");
 
-          if (user.email === "victor@personal.com") {
-            document.getElementById("cadastroArea").style.display = "block";
-          } else {
-            db.collection("alunos").doc(user.uid).get().then(doc => {
-              const dados = doc.data();
-              if (dados) {
-                document.getElementById("alunoArea").style.display = "block";
-                document.getElementById("alunoNome").innerText = dados.nome || user.email;
-              } else {
-                alert("Dados do aluno não encontrados.");
-                auth.signOut();
-                document.getElementById("loginArea").style.display = "block";
-              }
-            });
-          }
-        })
-        .catch(error => {
-          alert("Erro ao fazer login: " + error.message);
-        });
-    }
+        if (email === "victor@personal.com") {
+          document.getElementById("personalContainer").classList.remove("hidden");
+          carregarAlunosSelect();
+          carregarListaAlunos();
+        } else {
+          document.getElementById("alunoContainer").classList.remove("hidden");
+          carregarTreinosDoAluno(userCred.user.uid);
+        }
+      })
+      .catch(e => alert("Erro ao logar: " + e.message));
+  }
 
-    function cadastrarAluno() {
-      const nome = document.getElementById("nomeAluno").value;
-      const email = document.getElementById("usuarioAluno").value;
-      const senha = document.getElementById("senhaAluno").value;
+  function logout() {
+    auth.signOut().then(() => location.reload());
+  }
 
-      if (!nome || !email || !senha) {
-        alert("Preencha todos os campos!");
-        return;
-      }
+  function mostrarSecao(id) {
+    ["cadastroAluno", "gerenciarTreinos", "verAlunos"].forEach(sec => {
+      document.getElementById(sec).classList.add("hidden");
+    });
+    document.getElementById(id).classList.remove("hidden");
+  }
 
-      auth.createUserWithEmailAndPassword(email, senha)
-        .then((userCredential) => {
-          const uid = userCredential.user.uid;
-          return db.collection("alunos").doc(uid).set({ nome });
-        })
-        .then(() => {
-          alert("Aluno cadastrado com sucesso!");
-          document.getElementById("nomeAluno").value = "";
-          document.getElementById("usuarioAluno").value = "";
-          document.getElementById("senhaAluno").value = "";
-        })
-        .catch(error => {
-          alert("Erro ao cadastrar aluno: " + error.message);
-        });
-    }
+  function cadastrarAluno() {
+    const nome = document.getElementById("nomeAluno").value;
+    const email = document.getElementById("emailAluno").value;
+    const senha = document.getElementById("senhaAluno").value;
 
-    function sair() {
-      auth.signOut().then(() => {
-        document.getElementById("loginArea").style.display = "block";
-        document.getElementById("cadastroArea").style.display = "none";
-        document.getElementById("alunoArea").style.display = "none";
+    auth.createUserWithEmailAndPassword(email, senha)
+      .then((cred) => {
+        return db.collection("alunos").doc(cred.user.uid).set({ nome });
+      })
+      .then(() => {
+        alert("Aluno cadastrado com sucesso!");
+        document.getElementById("nomeAluno").value = "";
+        document.getElementById("emailAluno").value = "";
+        document.getElementById("senhaAluno").value = "";
+        carregarAlunosSelect();
+        carregarListaAlunos();
+      })
+      .catch(e => alert("Erro ao cadastrar aluno: " + e.message));
+  }
+
+  function carregarAlunosSelect() {
+    const select = document.getElementById("alunoTreino");
+    select.innerHTML = "";
+    db.collection("alunos").get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const option = document.createElement("option");
+        option.value = doc.id;
+        option.textContent = doc.data().nome;
+        select.appendChild(option);
       });
-    }
-  </script>
+    });
+  }
+
+  function adicionarTreino() {
+    const alunoId = document.getElementById("alunoTreino").value;
+    const tipo = document.getElementById("tipoTreino").value;
+    const series = document.getElementById("seriesReps").value;
+    const obs = document.getElementById("obsTreino").value;
+
+    db.collection("alunos").doc(alunoId).collection("treinos").add({
+      tipo, series, obs, criado: new Date()
+    }).then(() => {
+      alert("Treino salvo com sucesso!");
+      document.getElementById("tipoTreino").value = "";
+      document.getElementById("seriesReps").value = "";
+      document.getElementById("obsTreino").value = "";
+    });
+  }
+
+  function carregarListaAlunos() {
+    const lista = document.getElementById("listaAlunos");
+    lista.innerHTML = "";
+    db.collection("alunos").get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const div = document.createElement("div");
+        div.innerHTML = `<strong>${doc.data().nome}</strong>`;
+        lista.appendChild(div);
+      });
+    });
+  }
+
+  function carregarTreinosDoAluno(uid) {
+    const container = document.getElementById("treinosAluno");
+    container.innerHTML = "";
+    db.collection("alunos").doc(uid).collection("treinos").get()
+      .then(snapshot => {
+        snapshot.forEach(doc => {
+          const treino = doc.data();
+          const div = document.createElement("div");
+          div.innerHTML = `
+            <p><strong>Tipo:</strong> ${treino.tipo}</p>
+            <p><strong>Séries / Repetições:</strong> ${treino.series}</p>
+            <p><strong>Observações:</strong> ${treino.obs}</p>
+            <hr>`;
+          container.appendChild(div);
+        });
+      });
+  }
+</script>
+
 </body>
 </html>
