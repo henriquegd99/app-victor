@@ -9,86 +9,64 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      padding: 20px;
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+    .container { background: #fff; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    h2 { color: #333; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, select, button, textarea {
+      width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px;
+      border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box;
     }
-    .container {
-      background: white;
-      padding: 20px;
-      margin: 20px auto;
-      border-radius: 10px;
-      max-width: 800px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input, textarea, select, button {
-      display: block;
-      width: 100%;
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background-color: #007bff;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    .hidden {
-      display: none;
-    }
+    button { background: #007bff; color: white; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <div class="container" id="login">
+  <div class="container" id="loginContainer">
     <h2>Login</h2>
-    <input type="email" id="loginEmail" placeholder="Email" />
-    <input type="password" id="loginSenha" placeholder="Senha" />
+    <label>Email</label>
+    <input type="email" id="email" />
+    <label>Senha</label>
+    <input type="password" id="senha" />
     <button onclick="login()">Entrar</button>
   </div>
 
-  <div class="container hidden" id="dashboardVictor">
-    <h2>Bem-vindo, Victor!</h2>
+  <div class="container hidden" id="dashboardPersonal">
+    <h2>Painel do Personal</h2>
     <button onclick="mostrarCadastroAluno()">Cadastrar Aluno</button>
     <button onclick="mostrarGerenciarTreinos()">Gerenciar Treinos</button>
-    <button onclick="mostrarListaAlunos()">Lista de Alunos</button>
-    <button onclick="logout()">Sair</button>
+    <button onclick="mostrarListaAlunos()">Ver Alunos</button>
   </div>
 
   <div class="container hidden" id="cadastroAluno">
-    <h3>Cadastrar Novo Aluno</h3>
-    <input type="text" id="alunoNome" placeholder="Nome do Aluno" />
-    <input type="email" id="alunoEmail" placeholder="Email do Aluno" />
-    <input type="password" id="alunoSenha" placeholder="Senha Padrão" value="123456" />
-    <button onclick="cadastrarAluno()">Cadastrar</button>
+    <h2>Cadastrar Novo Aluno</h2>
+    <label>Email do aluno (@vt.com)</label>
+    <input type="text" id="novoEmailAluno" placeholder="nome@vt.com" />
+    <label>Senha</label>
+    <input type="password" id="novaSenhaAluno" value="123456" />
+    <button onclick="cadastrarAlunoFirebase()">Criar Aluno</button>
     <button onclick="voltarDashboard()">Voltar</button>
   </div>
 
   <div class="container hidden" id="gerenciarTreinos">
-    <h3>Gerenciar Treinos</h3>
+    <h2>Gerenciar Treinos</h2>
+    <label>Selecione o Aluno</label>
     <select id="alunoSelecionado"></select>
-    <textarea id="treinoTexto" placeholder="Ex: Peito - 4x12 / Bíceps - 3x10"></textarea>
+    <label>Tipo de Treino</label>
+    <input type="text" id="tipoTreino"/>
+    <label>Séries / Repetições</label>
+    <input type="text" id="serieReps"/>
+    <label>Observação</label>
+    <textarea id="obsTreino"></textarea>
     <button onclick="salvarTreino()">Salvar Treino</button>
     <button onclick="voltarDashboard()">Voltar</button>
   </div>
 
   <div class="container hidden" id="listaAlunos">
-    <h3>Alunos Cadastrados</h3>
+    <h2>Alunos Cadastrados</h2>
     <ul id="alunosList"></ul>
     <button onclick="voltarDashboard()">Voltar</button>
-  </div>
-
-  <div class="container hidden" id="dashboardAluno">
-    <h2>Seus Treinos</h2>
-    <div id="meusTreinos"></div>
-    <label>Nova senha:</label>
-    <input type="password" id="novaSenhaAlunoUsuario" />
-    <button onclick="alterarSenhaAluno()">Alterar Senha</button>
-    <button onclick="logout()">Sair</button>
   </div>
 
   <script>
@@ -100,113 +78,96 @@
       messagingSenderId: "148264648190",
       appId: "1:148264648190:web:44ca5e2d571a5d00acd4af"
     };
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
     function login() {
-      const email = document.getElementById("loginEmail").value;
-      const senha = document.getElementById("loginSenha").value;
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
       auth.signInWithEmailAndPassword(email, senha)
-        .then((cred) => {
-          const usuario = cred.user.email;
-          if (usuario === "victor@personal.com") {
-            mostrar("dashboardVictor");
-            carregarAlunos();
+        .then(() => {
+          if (email === 'victor@personal.com') {
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('dashboardPersonal').classList.remove('hidden');
+            listarAlunos();
           } else {
-            mostrar("dashboardAluno");
-            carregarTreinosAluno(usuario);
+            alert('Login como aluno');
+            // Redirecionar para a área do aluno se necessário
           }
         })
-        .catch(err => alert("Erro: " + err.message));
-    }
-
-    function mostrar(id) {
-      ["login", "dashboardVictor", "cadastroAluno", "gerenciarTreinos", "listaAlunos", "dashboardAluno"]
-        .forEach(el => document.getElementById(el).classList.add("hidden"));
-      document.getElementById(id).classList.remove("hidden");
-    }
-
-    function logout() {
-      auth.signOut().then(() => mostrar("login"));
+        .catch(e => alert("Erro: " + e.message));
     }
 
     function mostrarCadastroAluno() {
-      mostrar("cadastroAluno");
+      document.getElementById('dashboardPersonal').classList.add('hidden');
+      document.getElementById('cadastroAluno').classList.remove('hidden');
     }
 
     function mostrarGerenciarTreinos() {
-      carregarAlunosNoSelect();
-      mostrar("gerenciarTreinos");
+      document.getElementById('dashboardPersonal').classList.add('hidden');
+      document.getElementById('gerenciarTreinos').classList.remove('hidden');
     }
 
     function mostrarListaAlunos() {
-      mostrar("listaAlunos");
-      carregarLista();
+      document.getElementById('dashboardPersonal').classList.add('hidden');
+      document.getElementById('listaAlunos').classList.remove('hidden');
     }
 
     function voltarDashboard() {
-      mostrar("dashboardVictor");
+      document.querySelectorAll('.container').forEach(el => el.classList.add('hidden'));
+      document.getElementById('dashboardPersonal').classList.remove('hidden');
     }
 
-    function cadastrarAluno() {
-      const nome = document.getElementById("alunoNome").value;
-      const email = document.getElementById("alunoEmail").value;
-      const senha = document.getElementById("alunoSenha").value;
-
+    function cadastrarAlunoFirebase() {
+      const email = document.getElementById('novoEmailAluno').value;
+      const senha = document.getElementById('novaSenhaAluno').value;
       auth.createUserWithEmailAndPassword(email, senha)
-        .then(() => db.collection("alunos").doc(email).set({ nome, email, treinos: "" }))
         .then(() => alert("Aluno cadastrado com sucesso!"))
-        .catch(err => alert("Erro: " + err.message));
+        .catch(e => alert("Erro: " + e.message));
     }
 
-    function carregarAlunos() {
-      db.collection("alunos").get().then(snapshot => {
-        const lista = document.getElementById("alunosList");
-        lista.innerHTML = "";
-        snapshot.forEach(doc => {
-          const aluno = doc.data();
-          const li = document.createElement("li");
-          li.textContent = aluno.nome + " - " + aluno.email;
-          lista.appendChild(li);
-        });
-      });
-    }
+    function listarAlunos() {
+      const alunosList = document.getElementById('alunosList');
+      const dropdown = document.getElementById('alunoSelecionado');
+      alunosList.innerHTML = "";
+      dropdown.innerHTML = "";
 
-    function carregarAlunosNoSelect() {
-      const select = document.getElementById("alunoSelecionado");
-      select.innerHTML = "";
-      db.collection("alunos").get().then(snapshot => {
+      // Buscar apenas usuários da coleção de treinos
+      db.collection("users").get().then(snapshot => {
         snapshot.forEach(doc => {
-          const aluno = doc.data();
-          const option = document.createElement("option");
-          option.value = aluno.email;
-          option.textContent = aluno.nome;
-          select.appendChild(option);
+          const data = doc.data();
+          if (doc.id.endsWith("@vt.com")) {
+            const nome = doc.id.split("@")[0];
+            const li = document.createElement("li");
+            li.innerText = nome;
+            alunosList.appendChild(li);
+
+            const opt = document.createElement("option");
+            opt.value = doc.id;
+            opt.textContent = nome;
+            dropdown.appendChild(opt);
+          }
         });
       });
     }
 
     function salvarTreino() {
-      const email = document.getElementById("alunoSelecionado").value;
-      const treino = document.getElementById("treinoTexto").value;
-      db.collection("alunos").doc(email).update({ treinos: treino })
-        .then(() => alert("Treino salvo!"));
-    }
+      const aluno = document.getElementById('alunoSelecionado').value;
+      const tipoTreino = document.getElementById('tipoTreino').value;
+      const serieReps = document.getElementById('serieReps').value;
+      const obs = document.getElementById('obsTreino').value;
 
-    function carregarTreinosAluno(email) {
-      db.collection("alunos").doc(email).get().then(doc => {
-        if (doc.exists) {
-          document.getElementById("meusTreinos").innerText = doc.data().treinos || "Sem treinos cadastrados ainda.";
-        }
-      });
-    }
-
-    function alterarSenhaAluno() {
-      const novaSenha = document.getElementById("novaSenhaAlunoUsuario").value;
-      auth.currentUser.updatePassword(novaSenha)
-        .then(() => alert("Senha alterada com sucesso!"))
-        .catch(err => alert("Erro: " + err.message));
+      db.collection("treinos").add({
+        aluno,
+        tipoTreino,
+        serieReps,
+        obs,
+        criadoEm: new Date()
+      }).then(() => {
+        alert("Treino salvo!");
+      }).catch(e => alert("Erro ao salvar treino: " + e.message));
     }
   </script>
 </body>
